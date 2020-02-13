@@ -6,4 +6,17 @@ file = path.normalize(file);  // La estandariza
 
 const functTest = require('./module');
 
-functTest(file);
+if (path.extname(file) === '.md') {
+  const myPromise = functTest(file)
+  .then((fileData) => {
+    console.log(fileData);
+  })
+  .catch((error) => {
+    console.error(error)
+  })
+} else {
+  console.log('Por favor, introduce un archivo .md')
+}
+
+
+  //myPromise.then()
