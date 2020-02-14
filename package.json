@@ -18,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/bdiniscia/SCL012-MD-Links-/issues"
   },
-  "homepage": "https://github.com/bdiniscia/SCL012-MD-Links-#readme"
+  "homepage": "https://github.com/bdiniscia/SCL012-MD-Links-#readme",
+  "dependencies": {
+    "chalk": "^3.0.0"
+  }
 }
