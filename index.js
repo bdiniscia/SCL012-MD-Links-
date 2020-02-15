@@ -22,14 +22,29 @@ if (path.extname(file) === '.md') { // Chequea si un archivo es .md antes de pas
 			codeLinkStatus(fileData);
 		} else if (option1 === '-s' || option1 === '--stats') {
 			linksStats(fileData, false);
+		} else {
+			linksInDoc(fileData);
 		}
     })
     .catch(error => {
       console.error(error);
     });
 } else {
-  console.log(chalk.bgRed('Por favor, introduce un archivo .md'));
+  console.log(chalk.bgRed('Por favor, introduce un archivo .md válido'));
 }
+
+// Función que solo muestra los links
+const linksInDoc = (links) => {
+	links.forEach(element => {
+		console.log(
+			chalk.greenBright('»'),
+			chalk.cyan(element.href),
+			chalk.yellow.bold(element.text),
+			chalk.magenta(element.file)
+		)
+	})
+}
+
 
 //  Función que chequea el status de cada link
 const codeLinkStatus = (links) => {
@@ -41,14 +56,16 @@ const codeLinkStatus = (links) => {
             chalk.green('[✔]'),
             chalk.cyan(element.href),
             chalk.bgGreen(` ${response.status} ${response.statusText} `),
-            chalk.yellow(element.text)
+			chalk.yellow.bold(element.text),
+			chalk.magenta(element.file)
           );
         } else {
           console.log(
             chalk.red('[X]'),
             chalk.cyan(element.href),
             chalk.bgRed(` ${response.status} ${response.statusText} `),
-            chalk.white(element.text)
+			chalk.white(element.text),
+			chalk.magenta(element.file)
           );
         }
       })
@@ -57,12 +74,14 @@ const codeLinkStatus = (links) => {
           chalk.gray('[-]'),
           chalk.cyan(element.href),
           chalk.bgRed(` ${error.type} ${error.code} `),
-          chalk.white(element.text)
+		  chalk.white(element.text),
+		  chalk.magenta(element.file)
         )
       );
   });
 };
 
+// Función de "-s" y "-v -s"
 const linksStats = (links, isBothOptions) => {
 	let numOfLinks = [];
 
@@ -74,7 +93,7 @@ const linksStats = (links, isBothOptions) => {
 		chalk.black.bgGreen('Total: '), chalk.green(numOfLinks.length), '\n',
 		chalk.black.bgYellow('Unique: '), chalk.yellow(uniqueLinks.size)
 	)
-	if (isBothOptions) {
+	if (isBothOptions) { // Si es true, muestra también los broken.
 		let countBroken = 0;
 		const checkLinks = (numOfLinks) => {
 			if (numOfLinks.length < 1)  {
@@ -99,29 +118,3 @@ const linksStats = (links, isBothOptions) => {
 		checkLinks(numOfLinks);
 	}
 };
-
-// const linksStatsValidate = (links) => {
-// 	linksStats(links)
-// 	let countLinksDown = 0;
-// 	let countOfLinks = 0;
-// 	links.map(element => {
-// 		fetch(element.href)
-// 		  .then(response => {
-// 			countOfLinks++
-// 			  if (!response.ok) {
-// 				countLinksDown++
-// 			  }
-// 		  }).catch (error => {
-// 			countOfLinks++;
-// 			countLinksDown++;
-// 		  })
-// 		})
-
-// 		if (countOfLinks === links.length) {
-// 			console.log('Broken: ' + countLinksDown)
-// 		}
-// }
-
-
-
-
