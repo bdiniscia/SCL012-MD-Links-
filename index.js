@@ -1,6 +1,7 @@
 const path = require('path');
 const chalk = require('chalk');
 const fetch = require('node-fetch');
+const request = require('request');
 
 let file = process.argv[2]; // Toma el archivo que se le da en la consola
 file = path.resolve(file); // Convierte la ruta de relativa a absoluta
@@ -16,11 +17,11 @@ if (path.extname(file) === '.md') { // Chequea si un archivo es .md antes de pas
   const myPromise = functTest(file)
     .then(fileData => {
 		if (option1 === '-v' && option2 === '-s' || option1 === '-s' && option2 === '-v') {
-			linksStatsValidate(fileData)
+			linksStats(fileData, true);
 		} else if (option1 === '-v' || option1 === '--validate') {
 			codeLinkStatus(fileData);
 		} else if (option1 === '-s' || option1 === '--stats') {
-			linksStats(fileData);
+			linksStats(fileData, false);
 		}
     })
     .catch(error => {
@@ -62,36 +63,65 @@ const codeLinkStatus = (links) => {
   });
 };
 
-const linksStats = (links) => {
+const linksStats = (links, isBothOptions) => {
 	let numOfLinks = [];
-	let uniqueLinks = [];
-	links.map(element => {
+
+	links.forEach(element => {
 		numOfLinks.push(element.href)
-	})
-	uniqueLinks = new Set(numOfLinks);
+	});
+	let uniqueLinks = new Set(numOfLinks);
 	console.log(
-		'Total:' + numOfLinks.length,
-		'Unique: ' + uniqueLinks.size,
+		chalk.black.bgGreen('Total: '), chalk.green(numOfLinks.length), '\n',
+		chalk.black.bgYellow('Unique: '), chalk.yellow(uniqueLinks.size)
 	)
+	if (isBothOptions) {
+		let countBroken = 0;
+		const checkLinks = (numOfLinks) => {
+			if (numOfLinks.length < 1)  {
+				console.log(chalk.black.bgMagenta('Broken: '), chalk.magenta(countBroken));
+				return;
+			}
+
+			let actualLink = numOfLinks[0];
+			numOfLinks.shift();
+
+			fetch(actualLink)
+      			.then(response => {
+					  if (!response.ok) {
+						countBroken++;
+					  }
+					  checkLinks(numOfLinks);
+				}).catch(error => {
+					  countBroken++;
+					  checkLinks(numOfLinks);
+				});
+		}
+		checkLinks(numOfLinks);
+	}
 };
 
-const linksStatsValidate = (links) => {
-	linksStats(links)
-	let countLinksDown = 0;
-	links.map(element => {
-		fetch(element.href)
-		  .then(response => {
-			  if (!response.ok) {
-				countLinksDown++
-			  }
-		  }).catch (error => 
-			countLinksDown++
-			)
-		})
-	const showBroken = () => {
-		console.log('Broken: ' + countLinksDown)
-	}
-	setTimeout(showBroken, 2000);
-}
+// const linksStatsValidate = (links) => {
+// 	linksStats(links)
+// 	let countLinksDown = 0;
+// 	let countOfLinks = 0;
+// 	links.map(element => {
+// 		fetch(element.href)
+// 		  .then(response => {
+// 			countOfLinks++
+// 			  if (!response.ok) {
+// 				countLinksDown++
+// 			  }
+// 		  }).catch (error => {
+// 			countOfLinks++;
+// 			countLinksDown++;
+// 		  })
+// 		})
+
+// 		if (countOfLinks === links.length) {
+// 			console.log('Broken: ' + countLinksDown)
+// 		}
+// }
+
+
 
 
