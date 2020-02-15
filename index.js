@@ -7,20 +7,21 @@ file = path.resolve(file); // Convierte la ruta de relativa a absoluta
 file = path.normalize(file); // La estandariza
 
 const functTest = require('./module'); // Mi función de module.js
-const validate = false; 
 const option1 = process.argv[3]
+const option2 = process.argv[4]
 
 
 // Función que llama a la promesa
 if (path.extname(file) === '.md') { // Chequea si un archivo es .md antes de pasarlo
   const myPromise = functTest(file)
     .then(fileData => {
-		if (option1 === '-v' || option1 === '--validate') {
+		if (option1 === '-v' && option2 === '-s' || option1 === '-s' && option2 === '-v') {
+			linksStatsValidate(fileData)
+		} else if (option1 === '-v' || option1 === '--validate') {
 			codeLinkStatus(fileData);
 		} else if (option1 === '-s' || option1 === '--stats') {
 			linksStats(fileData);
 		}
-      
     })
     .catch(error => {
       console.error(error);
@@ -30,7 +31,7 @@ if (path.extname(file) === '.md') { // Chequea si un archivo es .md antes de pas
 }
 
 //  Función que chequea el status de cada link
-const codeLinkStatus = links => {
+const codeLinkStatus = (links) => {
   links.map(element => {
     fetch(element.href)
       .then(response => {
@@ -73,5 +74,24 @@ const linksStats = (links) => {
 		'Unique: ' + uniqueLinks.size,
 	)
 };
+
+const linksStatsValidate = (links) => {
+	linksStats(links)
+	let countLinksDown = 0;
+	links.map(element => {
+		fetch(element.href)
+		  .then(response => {
+			  if (!response.ok) {
+				countLinksDown++
+			  }
+		  }).catch (error => 
+			countLinksDown++
+			)
+		})
+	const showBroken = () => {
+		console.log('Broken: ' + countLinksDown)
+	}
+	setTimeout(showBroken, 2000);
+}
 
 
