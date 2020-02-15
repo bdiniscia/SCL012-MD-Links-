@@ -7,13 +7,20 @@ file = path.resolve(file); // Convierte la ruta de relativa a absoluta
 file = path.normalize(file); // La estandariza
 
 const functTest = require('./module'); // Mi función de module.js
+const validate = false; 
+const option1 = process.argv[3]
+
 
 // Función que llama a la promesa
-if (path.extname(file) === '.md') {
-  // Chequea si un archivo es .md antes de pasarlo
+if (path.extname(file) === '.md') { // Chequea si un archivo es .md antes de pasarlo
   const myPromise = functTest(file)
     .then(fileData => {
-      codeLinkStatus(fileData);
+		if (option1 === '-v' || option1 === '--validate') {
+			codeLinkStatus(fileData);
+		} else if (option1 === '-s' || option1 === '--stats') {
+			linksStats(fileData);
+		}
+      
     })
     .catch(error => {
       console.error(error);
@@ -53,3 +60,18 @@ const codeLinkStatus = links => {
       );
   });
 };
+
+const linksStats = (links) => {
+	let numOfLinks = [];
+	let uniqueLinks = [];
+	links.map(element => {
+		numOfLinks.push(element.href)
+	})
+	uniqueLinks = new Set(numOfLinks);
+	console.log(
+		'Total:' + numOfLinks.length,
+		'Unique: ' + uniqueLinks.size,
+	)
+};
+
+
