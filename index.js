@@ -1,37 +1,65 @@
-const path = require('path');
-const chalk = require('chalk');
+const fs = require('fs');
+const marked = require('marked');
 const fetch = require('node-fetch');
-const request = require('request');
+const chalk = require('chalk');
 
-let file = process.argv[2]; // Toma el archivo que se le da en la consola
-file = path.resolve(file); // Convierte la ruta de relativa a absoluta
-file = path.normalize(file); // La estandariza
+// Mi función que me lee y manipula el archivo
+const mdlinks = (file, options) => {
+  return new Promise((resolve, reject) => {
+    fs.readFile(file, 'utf8', (err, data) => {
+      if (err) {
+        return reject(err);
+      }
+      let links = [];
+      const renderer = new marked.Renderer(); // Get reference
+      renderer.link = function(href, title, text) {
+        // Override function
+        links.push({
+          href: href,
+          text: text,
+          file: file
+        });
+      };
+      marked(data, { renderer: renderer }); // Aquí imprime y crea los elementos dentro del Array
+      links = linksHttp(links);
 
-const functTest = require('./module'); // Mi función de module.js
-const option1 = process.argv[3]
-const option2 = process.argv[4]
+      if (options.validate === false && options.stats === false) {
+        resolve(linksInDoc(links));
+        return;
+      }
 
+      if (options.validate === true && options.stats === false) {
+        resolve(codeLinkStatus(links));
+        return;
+      }
 
-// Función que llama a la promesa
-if (path.extname(file) === '.md') { // Chequea si un archivo es .md antes de pasarlo
-  const myPromise = functTest(file)
-    .then(fileData => {
-		if (option1 === '-v' && option2 === '-s' || option1 === '-s' && option2 === '-v') {
-			linksStats(fileData, true);
-		} else if (option1 === '-v' || option1 === '--validate') {
-			codeLinkStatus(fileData);
-		} else if (option1 === '-s' || option1 === '--stats') {
-			linksStats(fileData, false);
-		} else {
-			linksInDoc(fileData);
-		}
-    })
-    .catch(error => {
-      console.error(error);
+      if (options.validate === false && options.stats === true) {
+        resolve(linksStats(links, false));
+        return;
+      }
+
+      if (options.validate === true && options.stats === true) {
+        resolve(linksStats(links, true));
+        return;
+      }
+        
     });
-} else {
-  console.log(chalk.bgRed('Por favor, introduce un archivo .md válido'));
-}
+  });
+};
+
+
+// Filtra y retorna un nuevo array con los links que contienen 'http'
+const linksHttp = links => {
+  let validateLink = [];
+  links.map(element => {
+    let prefix = element.href.substring(0, 4);
+    if (prefix === 'http') {
+      validateLink.push(element);
+    }
+  });
+  return validateLink;
+};
+
 
 // Función que solo muestra los links
 const linksInDoc = (links) => {
@@ -95,26 +123,29 @@ const linksStats = (links, isBothOptions) => {
 	)
 	if (isBothOptions) { // Si es true, muestra también los broken.
 		let countBroken = 0;
-		const checkLinks = (numOfLinks) => {
-			if (numOfLinks.length < 1)  {
+		const checkLinks = (numOfLinks) => {  // Función recurrente para contar los Broken
+			if (numOfLinks.length < 1)  {  // La condición que para la función
 				console.log(chalk.black.bgMagenta('Broken: '), chalk.magenta(countBroken));
 				return;
 			}
 
-			let actualLink = numOfLinks[0];
-			numOfLinks.shift();
+			let actualLink = numOfLinks[0];  // El link a evaluar siempre
+			numOfLinks.shift();  // Quita el primer elemento del Array luego de asignarlo a actualLink
 
-			fetch(actualLink)
+			fetch(actualLink)  // Promesa para evaluar cada link y agregar en el contador los rotos
       			.then(response => {
 					  if (!response.ok) {
 						countBroken++;
 					  }
-					  checkLinks(numOfLinks);
+					  checkLinks(numOfLinks); // Se vuelve a llamar a si misma si pasa al then
 				}).catch(error => {
 					  countBroken++;
-					  checkLinks(numOfLinks);
+					  checkLinks(numOfLinks);  // Se vuelve a llamar a si misma si cae en error
 				});
 		}
-		checkLinks(numOfLinks);
+		checkLinks(numOfLinks);  // Inicializa la función recurrente
 	}
 };
+
+
+module.exports = mdlinks; // Exporta la función principal
