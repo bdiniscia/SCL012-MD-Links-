@@ -37,10 +37,53 @@ checkOptions();
 // Función que llama a la promesa
 if (path.extname(file) === '.md') { // Chequea si un archivo es .md antes de pasarlo
   const myPromise = mdlinks(file, options)
-    .then( () => {
+    .then( data => {
+        if (options.validate === false && options.stats === false) {
+            console.log(data)
+            linksInDoc(data);
+        } else if (options.validate === true && options.stats === false) {
+            printStatus(data);
+        }
+        
 	}).catch(error => {
       console.error(error);
     });
 } else {
   console.log(chalk.bgRed('Por favor, introduce un archivo .md válido'));
 }
+
+// Función que solo muestra los links
+const linksInDoc = (links) => {
+	links.forEach(element => {
+		console.log(
+			chalk.greenBright('»'),
+			chalk.cyan(element.href),
+			chalk.yellow.bold(element.text),
+			chalk.magenta(element.file)
+		)
+	})
+}
+
+//  Función que chequea el status de cada link
+const printStatus = (links) => {
+    console.log('Corriendo printStatus')
+    links.forEach(element => {
+          if (element.statusText === 'OK') {
+            console.log(
+              chalk.green('[✔]'),
+              chalk.cyan(element.href),
+              chalk.bgGreen(` ${element.status} ${element.statusText} `),
+              chalk.yellow.bold(element.text),
+              chalk.magenta(element.file)
+            );
+          } else {
+            console.log(
+              chalk.red('[X]'),
+              chalk.cyan(element.href),
+              chalk.bgRed(` ${element.status} ${element.statusText} `),
+              chalk.white(element.text),
+              chalk.magenta(element.file)
+            );
+          }
+        })
+};

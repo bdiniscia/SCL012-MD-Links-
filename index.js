@@ -1,12 +1,12 @@
-const fs = require('fs');
-const marked = require('marked');
-const fetch = require('node-fetch');
-const chalk = require('chalk');
+const fs = require("fs");
+const marked = require("marked");
+const fetch = require("node-fetch");
+const chalk = require("chalk");
 
 // Mi función que me lee y manipula el archivo
 const mdlinks = (file, options) => {
   return new Promise((resolve, reject) => {
-    fs.readFile(file, 'utf8', (err, data) => {
+    fs.readFile(file, "utf8", (err, data) => {
       if (err) {
         return reject(err);
       }
@@ -24,13 +24,12 @@ const mdlinks = (file, options) => {
       links = linksHttp(links);
 
       if (options.validate === false && options.stats === false) {
-        resolve(linksInDoc(links));
+        resolve(links);
         return;
       }
 
       if (options.validate === true && options.stats === false) {
-        resolve(codeLinkStatus(links));
-        return;
+        return resolve(codeLinkStatus(links, undefined));
       }
 
       if (options.validate === false && options.stats === true) {
@@ -42,110 +41,111 @@ const mdlinks = (file, options) => {
         resolve(linksStats(links, true));
         return;
       }
-        
     });
   });
 };
 
-
 // Filtra y retorna un nuevo array con los links que contienen 'http'
 const linksHttp = links => {
-  let validateLink = [];
-  links.map(element => {
-    let prefix = element.href.substring(0, 4);
-    if (prefix === 'http') {
-      validateLink.push(element);
-    }
+  return links.filter(link => {
+    return link.href.substring(0, 4) === "http";
   });
-  return validateLink;
 };
 
+//  Función que chequea el status de cada link
+// const codeLinkStatus = (links) => {
 
-// Función que solo muestra los links
-const linksInDoc = (links) => {
-	links.forEach(element => {
-		console.log(
-			chalk.greenBright('»'),
-			chalk.cyan(element.href),
-			chalk.yellow.bold(element.text),
-			chalk.magenta(element.file)
-		)
-	})
-}
-
+//       for(let i = 0; i<links.length; i++) {
+//         console.log(links[i].href)
+//         fetch(links[i].href)
+//           .then(response => {
+//           console.log(response.statusText);
+//           links[i].status = response.status;
+//           links[i].statusText = response.statusText;
+//         }).catch(error => {
+//           links[i].status = error.type;
+//           links[i].statusText = error.code;
+//         });
+//       }
+// };
 
 //  Función que chequea el status de cada link
-const codeLinkStatus = (links) => {
-  links.map(element => {
-    fetch(element.href)
+const codeLinkStatus = (links, newLinks) => {
+  
+    if (newLinks === undefined) {
+      newLinks = [];
+    }
+
+    if (links.length < 1) { // La condición que para la función
+      return newLinks;
+    }
+
+    let actualLink = links[0]; // El link a evaluar siempre
+    console.log(">> here: 1");
+    links.shift(); // Quita el primer elemento del Array luego de asignarlo a actualLink
+    fetch(actualLink.href) // Promesa para evaluar cada link y agregar en el contador los rotos
       .then(response => {
-        if (response.ok) {
-          console.log(
-            chalk.green('[✔]'),
-            chalk.cyan(element.href),
-            chalk.bgGreen(` ${response.status} ${response.statusText} `),
-			chalk.yellow.bold(element.text),
-			chalk.magenta(element.file)
-          );
-        } else {
-          console.log(
-            chalk.red('[X]'),
-            chalk.cyan(element.href),
-            chalk.bgRed(` ${response.status} ${response.statusText} `),
-			chalk.white(element.text),
-			chalk.magenta(element.file)
-          );
-        }
+        console.log(">> here: 2");
+        actualLink.status = response.status;
+        actualLink.statusText = response.statusText;
+        newLinks.push(actualLink);
+        codeLinkStatus(links, newLinks); // Se vuelve a llamar a si misma si pasa al then
       })
-      .catch(error =>
-        console.log(
-          chalk.gray('[-]'),
-          chalk.cyan(element.href),
-          chalk.bgRed(` ${error.type} ${error.code} `),
-		  chalk.white(element.text),
-		  chalk.magenta(element.file)
-        )
-      );
-  });
+      .catch(error => {
+        console.log(">> here: 3");
+        actualLink.status = error.type;
+        actualLink.statusText = error.code;
+        newLinks.push(actualLink);
+        codeLinkStatus(links, newLinks); // Se vuelve a llamar a si misma si cae en error
+      });
 };
 
 // Función de "-s" y "-v -s"
 const linksStats = (links, isBothOptions) => {
-	let numOfLinks = [];
+  let numOfLinks = [];
 
-	links.forEach(element => {
-		numOfLinks.push(element.href)
-	});
-	let uniqueLinks = new Set(numOfLinks);
-	console.log(
-		chalk.black.bgGreen('Total: '), chalk.green(numOfLinks.length), '\n',
-		chalk.black.bgYellow('Unique: '), chalk.yellow(uniqueLinks.size)
-	)
-	if (isBothOptions) { // Si es true, muestra también los broken.
-		let countBroken = 0;
-		const checkLinks = (numOfLinks) => {  // Función recurrente para contar los Broken
-			if (numOfLinks.length < 1)  {  // La condición que para la función
-				console.log(chalk.black.bgMagenta('Broken: '), chalk.magenta(countBroken));
-				return;
-			}
+  links.forEach(element => {
+    numOfLinks.push(element.href);
+  });
+  let uniqueLinks = new Set(numOfLinks);
+  console.log(
+    chalk.black.bgGreen("Total: "),
+    chalk.green(numOfLinks.length),
+    "\n",
+    chalk.black.bgYellow("Unique: "),
+    chalk.yellow(uniqueLinks.size)
+  );
+  if (isBothOptions) {
+    // Si es true, muestra también los broken.
+    let countBroken = 0;
+    const checkLinks = numOfLinks => {
+      // Función recurrente para contar los Broken
+      if (numOfLinks.length < 1) {
+        // La condición que para la función
+        console.log(
+          chalk.black.bgMagenta("Broken: "),
+          chalk.magenta(countBroken)
+        );
+        return;
+      }
 
-			let actualLink = numOfLinks[0];  // El link a evaluar siempre
-			numOfLinks.shift();  // Quita el primer elemento del Array luego de asignarlo a actualLink
+      let actualLink = numOfLinks[0]; // El link a evaluar siempre
+      numOfLinks.shift(); // Quita el primer elemento del Array luego de asignarlo a actualLink
 
-			fetch(actualLink)  // Promesa para evaluar cada link y agregar en el contador los rotos
-      			.then(response => {
-					  if (!response.ok) {
-						countBroken++;
-					  }
-					  checkLinks(numOfLinks); // Se vuelve a llamar a si misma si pasa al then
-				}).catch(error => {
-					  countBroken++;
-					  checkLinks(numOfLinks);  // Se vuelve a llamar a si misma si cae en error
-				});
-		}
-		checkLinks(numOfLinks);  // Inicializa la función recurrente
-	}
+      fetch(actualLink) // Promesa para evaluar cada link y agregar en el contador los rotos
+        .then(response => {
+          if (!response.ok) {
+            countBroken++;
+          }
+          checkLinks(numOfLinks); // Se vuelve a llamar a si misma si pasa al then
+        })
+        .catch(error => {
+          countBroken++;
+          checkLinks(numOfLinks); // Se vuelve a llamar a si misma si cae en error
+        });
+    };
+    checkLinks(numOfLinks); // Inicializa la función recurrente
+  }
 };
-
 
 module.exports = mdlinks; // Exporta la función principal
