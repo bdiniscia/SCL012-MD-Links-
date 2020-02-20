@@ -3,8 +3,8 @@ const chalk = require('chalk');
 
 
 let file = process.argv[2]; // Toma el archivo que se le da en la consola
-file = path.resolve(file); // Convierte la ruta de relativa a absoluta
-file = path.normalize(file); // La estandariza
+// file = path.resolve(file); // Convierte la ruta de relativa a absoluta
+// file = path.normalize(file); // La estandariza
 
 const mdlinks = require('./index'); // Mi función de module.js
 const option1 = process.argv[3];

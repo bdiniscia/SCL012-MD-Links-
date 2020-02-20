@@ -1,10 +1,12 @@
 const fs = require("fs");
 const marked = require("marked");
 const fetch = require("node-fetch");
+const path = require('path');
 
 
 // Mi función que me lee y manipula el archivo
 const mdlinks = (file, options) => {
+  if (path.extname(file) === '.md') {
   return new Promise((resolve, reject) => {
     fs.readFile(file, "utf8", (err, data) => {
       if (err) {
@@ -32,7 +34,8 @@ const mdlinks = (file, options) => {
       }
     });
   });
-};
+}  
+}
 
 
 // Filtra y retorna un nuevo array con los links que contienen 'http'
