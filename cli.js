@@ -36,10 +36,10 @@ checkOptions();
 
 // Función que llama a la promesa
 if (path.extname(file) === '.md') { // Chequea si un archivo es .md antes de pasarlo
+    console.log(chalk.bgGrey.black('Espera un momento mientras se procesa tu información'))
   const myPromise = mdlinks(file, options)
     .then( data => {
         if (options.validate === false && options.stats === false) {
-            console.log(data)
             linksInDoc(data);
         } else if (options.validate === true && options.stats === false) {
             printStatus(data);
@@ -69,7 +69,7 @@ const linksInDoc = (links) => {
 	})
 }
 
-//  Función que chequea el status de cada link
+//  Función que imprime el status de cada link
 const printStatus = (links) => {
     links.forEach(element => {
           if (element.statusText === 'OK') {
@@ -92,6 +92,7 @@ const printStatus = (links) => {
         })
 };
 
+// Función que pinta los links totales y los únicos
 const printTotalLinks = (links) => {
     let numOfLinks = [];
 
@@ -108,6 +109,7 @@ const printTotalLinks = (links) => {
   );
 }
 
+// Función que imprime los links rotos
 const printTotalBroken = (links) => {
     let countBroken = 0;
     for(let i = 0; i < links.length; i++) {
