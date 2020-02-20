@@ -1,39 +1,47 @@
 const fs = require("fs");
 const marked = require("marked");
 const fetch = require("node-fetch");
-
+const path = require("path");
 
 // Mi función que me lee y manipula el archivo
 const mdlinks = (file, options) => {
-  return new Promise((resolve, reject) => {
-    fs.readFile(file, "utf8", (err, data) => {
-      if (err) {
-        return reject(err);
-      }
-      let links = [];
-      const renderer = new marked.Renderer(); // Get reference
-      renderer.link = function(href, title, text) { // Override function
-        links.push({
-          href: href,
-          text: text,
-          file: file
-        });
-      };
-      marked(data, { renderer: renderer }); // Aquí imprime y crea los elementos dentro del Array
-      links = linksHttp(links);
+  if (path.extname(file) === ".md") {
+    file = path.resolve(file); // Convierte la ruta de relativa a absoluta
+    file = path.normalize(file);
+    return new Promise((resolve, reject) => {
+      fs.readFile(file, "utf8", (err, data) => {
+        if (err) {
+          return reject(err);
+        }
+        let links = [];
+        const renderer = new marked.Renderer(); // Get reference
+        renderer.link = function(href, title, text) {
+          // Override function
+          links.push({
+            href: href,
+            text: text,
+            file: file
+          });
+        };
+        marked(data, { renderer: renderer }); // Aquí imprime y crea los elementos dentro del Array
+        links = linksHttp(links);
 
-      if (options.validate === false && options.stats === false || options.validate === false && options.stats === true) {  // Aquí solo se resuelve con el primer array generado
-        resolve(links);
-        return;
-      } else {
-        codeStatusLinks(links)  // Llamada de la promesa del nuevo array con status y statusCode
-          .then(links => resolve(links))
-          .catch(err => console.log(err));
-      }
+        if (
+          (options.validate === false && options.stats === false) ||
+          (options.validate === false && options.stats === true)
+        ) {
+          // Aquí solo se resuelve con el primer array generado
+          resolve(links);
+          return;
+        } else {
+          codeStatusLinks(links) // Llamada de la promesa del nuevo array con status y statusCode
+            .then(links => resolve(links))
+            .catch(err => console.log(err));
+        }
+      });
     });
-  });
+  }
 };
-
 
 // Filtra y retorna un nuevo array con los links que contienen 'http'
 const linksHttp = links => {
@@ -42,19 +50,20 @@ const linksHttp = links => {
   });
 };
 
-
 //  Función que chequea el status de cada link
-const codeStatusLinks = (links) => {
+const codeStatusLinks = links => {
   return new Promise((resolve, reject) => {
     const getCodeStatusLinks = (links, newLinks) => {
-      if (newLinks === undefined) { // Cuando pasa la primera vez 
+      if (newLinks === undefined) {
+        // Cuando pasa la primera vez
         newLinks = [];
       }
-    
-      if (links.length < 1) { // La condición que para la función
+
+      if (links.length < 1) {
+        // La condición que para la función
         return resolve(newLinks);
       }
-    
+
       let actualLink = links[0]; // El link a evaluar siempre
       links.shift(); // Quita el primer elemento del Array luego de asignarlo a actualLink
       fetch(actualLink.href) // Promesa para guardar el nuevo array con la nueva info de status y statusText

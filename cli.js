@@ -3,17 +3,17 @@ const chalk = require('chalk');
 
 
 let file = process.argv[2]; // Toma el archivo que se le da en la consola
-file = path.resolve(file); // Convierte la ruta de relativa a absoluta
-file = path.normalize(file); // La estandariza
 
-const mdlinks = require('./index'); // Mi función de module.js
+const mdlinks = require('./index'); // Mi función de index.js
 const option1 = process.argv[3];
 const option2 = process.argv[4];
+// Flags
 let options = {
     validate:false,
     stats: false
 }
 
+// Chequea la  opciones introducidas por el usuario y cambia los flags
 const checkOptions = () => {
 if (option1 === '-v' && option2 === '-s' || option1 === '-s' && option2 === '-v') {
     options = {
@@ -57,7 +57,7 @@ if (path.extname(file) === '.md') { // Chequea si un archivo es .md antes de pas
   console.log(chalk.bgRed('Por favor, introduce un archivo .md válido'));
 }
 
-// Función que solo muestra los links
+// Función que solo muestra los links (sin opciones activas)
 const linksInDoc = (links) => {
 	links.forEach(element => {
 		console.log(
@@ -69,7 +69,7 @@ const linksInDoc = (links) => {
 	})
 }
 
-//  Función que imprime el status de cada link
+//  Función que imprime los links y sus status (--validate) 
 const printStatus = (links) => {
     links.forEach(element => {
           if (element.statusText === 'OK') {
@@ -92,7 +92,7 @@ const printStatus = (links) => {
         })
 };
 
-// Función que pinta los links totales y los únicos
+// Función que pinta los links totales y los únicos (--stats)
 const printTotalLinks = (links) => {
     let numOfLinks = [];
 
@@ -109,7 +109,7 @@ const printTotalLinks = (links) => {
   );
 }
 
-// Función que imprime los links rotos
+// Función que imprime los links rotos (-v -s)
 const printTotalBroken = (links) => {
     let countBroken = 0;
     for(let i = 0; i < links.length; i++) {
