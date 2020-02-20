@@ -43,6 +43,11 @@ if (path.extname(file) === '.md') { // Chequea si un archivo es .md antes de pas
             linksInDoc(data);
         } else if (options.validate === true && options.stats === false) {
             printStatus(data);
+        } else if (options.validate === false && options.stats === true) {
+            printTotalLinks(data)
+        } else if (options.validate === true && options.stats === true) {
+            printTotalLinks(data)
+            printTotalBroken(data)
         }
         
 	}).catch(error => {
@@ -66,7 +71,6 @@ const linksInDoc = (links) => {
 
 //  Función que chequea el status de cada link
 const printStatus = (links) => {
-    console.log('Corriendo printStatus')
     links.forEach(element => {
           if (element.statusText === 'OK') {
             console.log(
@@ -87,3 +91,31 @@ const printStatus = (links) => {
           }
         })
 };
+
+const printTotalLinks = (links) => {
+    let numOfLinks = [];
+
+    links.forEach(element => {
+        numOfLinks.push(element.href);
+    });
+    let uniqueLinks = new Set(numOfLinks);
+    console.log(
+    chalk.black.bgGreen("Total: "),
+    chalk.green(numOfLinks.length),
+    "\n",
+    chalk.black.bgYellow("Unique: "),
+    chalk.yellow(uniqueLinks.size)
+  );
+}
+
+const printTotalBroken = (links) => {
+    let countBroken = 0;
+    for(let i = 0; i < links.length; i++) {
+        if (links[i].statusText != 'OK') {
+            countBroken++
+        }
+    }
+    console.log(
+        chalk.black.bgMagenta("Broken: "),
+        chalk.magenta(countBroken));
+}
