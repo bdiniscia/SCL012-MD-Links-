@@ -76,6 +76,10 @@ Ejemplo:
 
 
 ## Diagrama de flujo del CLI.js
-![vista de --validate](img/Diagram.png)
+![vista de --validate](img/Diagram.jpeg)
 
+
+## Próximas iteraciones
+
+Se quiere desarrollar para próximas versiones que no nada más lea de un archivo específico de .md, sino todo los archivos dentro de una carpeta.
 
