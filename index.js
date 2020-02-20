@@ -1,7 +1,7 @@
 const fs = require("fs");
 const marked = require("marked");
 const fetch = require("node-fetch");
-const chalk = require("chalk");
+
 
 // Mi función que me lee y manipula el archivo
 const mdlinks = (file, options) => {
@@ -12,8 +12,7 @@ const mdlinks = (file, options) => {
       }
       let links = [];
       const renderer = new marked.Renderer(); // Get reference
-      renderer.link = function(href, title, text) {
-        // Override function
+      renderer.link = function(href, title, text) { // Override function
         links.push({
           href: href,
           text: text,
@@ -23,11 +22,11 @@ const mdlinks = (file, options) => {
       marked(data, { renderer: renderer }); // Aquí imprime y crea los elementos dentro del Array
       links = linksHttp(links);
 
-      if (options.validate === false && options.stats === false) {  // Aquí solo se resuelve con el primer array generado
+      if (options.validate === false && options.stats === false || options.validate === false && options.stats === true) {  // Aquí solo se resuelve con el primer array generado
         resolve(links);
         return;
       } else {
-        codeStatusLinks(links)  // Llamada de la promesa del 
+        codeStatusLinks(links)  // Llamada de la promesa del nuevo array con status y statusCode
           .then(links => resolve(links))
           .catch(err => console.log(err));
       }
@@ -48,18 +47,17 @@ const linksHttp = links => {
 const codeStatusLinks = (links) => {
   return new Promise((resolve, reject) => {
     const getCodeStatusLinks = (links, newLinks) => {
-      if (newLinks === undefined) {
+      if (newLinks === undefined) { // Cuando pasa la primera vez 
         newLinks = [];
       }
     
-      if (links.length < 1) {
-        // La condición que para la función
+      if (links.length < 1) { // La condición que para la función
         return resolve(newLinks);
       }
     
       let actualLink = links[0]; // El link a evaluar siempre
       links.shift(); // Quita el primer elemento del Array luego de asignarlo a actualLink
-      fetch(actualLink.href) // Promesa para evaluar cada link y agregar en el contador los rotos
+      fetch(actualLink.href) // Promesa para guardar el nuevo array con la nueva info de status y statusText
         .then(response => {
           actualLink.status = response.status;
           actualLink.statusText = response.statusText;
@@ -73,7 +71,6 @@ const codeStatusLinks = (links) => {
           getCodeStatusLinks(links, newLinks); // Se vuelve a llamar a si misma si cae en error
         });
     };
-
     getCodeStatusLinks(links); // La inicializa la primera vez
   });
 };
