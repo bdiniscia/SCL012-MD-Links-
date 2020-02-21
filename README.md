@@ -11,13 +11,13 @@ Para correr la librería:
 
 ### ¿Cómo utilizar la librería?
 
-Para linkear en la librería:
+Para linkear en la librería en tu archivo JavaScript luego de instalar el módulo con npm:
 ```
     const  mdLinks = require('md-links');
 ```
-Para utilizarla:
+Luego, para utilizarla:
 ```
-    mdlinks(path, options)
+    mdLinks(path, options)
 ```
 
 ##### Argumentos
@@ -81,5 +81,5 @@ Ejemplo:
 
 ## Próximas iteraciones
 
-Se quiere desarrollar para próximas versiones que no nada más lea de un archivo específico de .md, sino todo los archivos dentro de una carpeta.
+Se quiere desarrollar para próximas versiones que lea más de un archivo específico de .md, sino todo los archivos que tengan extensión .md dentro de un directorio.
 
