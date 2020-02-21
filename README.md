@@ -1,10 +1,18 @@
 # MD-Links
 MD-Links es una librería hecha con Node.js, para leer y analizar archivos en formato `Markdown`, y verificar los links que contengan y reportar algunas estadísticas, como la cantidad de links, el estado de los links y los links únicos. 
 
+[Link a npm](https://www.npmjs.com/package/md-links-bdiniscia)
+
 ## Instalación
 Para instalar debes correr el comando: 
 
     npm install bdiniscia/SCL012-MD-Links-
+
+o 
+
+
+    npm i md-links-bdiniscia
+
 
 ## Instrucciones de uso
 Para correr la librería:
